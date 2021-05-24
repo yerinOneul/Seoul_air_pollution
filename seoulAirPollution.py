@@ -16,7 +16,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import OneHotEncoder
 
 
-# In[101]:
+# In[2]:
 
 
 class preprocessing :
@@ -39,7 +39,7 @@ class preprocessing :
     
 
 
-# In[2]:
+# In[3]:
 
 
 #*****Data preprocessing*****
@@ -63,7 +63,7 @@ seoul = pd.read_csv("seoul_air_20130301-20170228.csv")
 weather = pd.read_csv("weather.csv")
 
 
-# In[3]:
+# In[4]:
 
 
 #*Data restructuring
@@ -82,7 +82,7 @@ beijing.drop(columns="No",inplace = True)
 beijing
 
 
-# In[4]:
+# In[5]:
 
 
 #change year, month, day, hour columns to date format 
@@ -94,13 +94,13 @@ beijing["Date"] = tt
 beijing.drop(columns=["year","month","day","hour"],inplace=True)
 
 
-# In[5]:
+# In[7]:
 
 
 beijing
 
 
-# In[7]:
+# In[8]:
 
 
 beijing.info()
@@ -108,14 +108,14 @@ seoul.info()
 weather.info()
 
 
-# In[8]:
+# In[9]:
 
 
 weather
 seoul
 
 
-# In[9]:
+# In[10]:
 
 
 #change MSRDT column to date format 
@@ -124,14 +124,14 @@ seoul["MSRDT"] = date_s.apply(lambda x: datetime.strptime(x, "%Y%m%d%H%M"))
 seoul
 
 
-# In[12]:
+# In[11]:
 
 
 weather["tm"] = weather["tm"].apply(lambda _: datetime.strptime(_,"%Y-%m-%d"))
 weather.info()
 
 
-# In[20]:
+# In[12]:
 
 
 #*Data value changes
@@ -141,20 +141,20 @@ weather.isnull().sum()
 beijing.isnull().sum()
 
 
-# In[14]:
+# In[13]:
 
 
 #weather - sumRn이 nan value이면 비가 오지 않은 날이므로 0.0으로 fill
 weather["sumRn"].fillna(0.0,inplace=True)
 
 
-# In[15]:
+# In[14]:
 
 
 weather.isnull().sum()
 
 
-# In[16]:
+# In[15]:
 
 
 #날씨 결측값을 가장 큰 양의 상관관계를 갖는 column을 파악한 뒤 regression으로 모델 학습 후 예측값으로 채우기
@@ -162,7 +162,7 @@ weather.isnull().sum()
 weather.corr()
 
 
-# In[17]:
+# In[16]:
 
 
 #corr() heatmap
@@ -171,7 +171,7 @@ plt.title('weather', fontsize=20)
 plt.show()
 
 
-# In[104]:
+# In[17]:
 
 
 #sumGsr과 avgTs는 0.5,sumGsr과 minRhm는 -0.55 sumGsr과 avgTs는 0.4
@@ -185,13 +185,13 @@ pred_y = linear.predict(weather.loc[:, ["avgTs","minRhm","avgTa"]])
 weather['sumGsr'].fillna(pd.Series(pred_y), inplace=True)
 
 
-# In[105]:
+# In[18]:
 
 
 weather.isnull().sum()
 
 
-# In[20]:
+# In[19]:
 
 
 #// maxWd와 sumGsr은 0.2,
@@ -200,53 +200,53 @@ weather.isnull().sum()
 weather[weather["maxWd"].isnull() == True]
 
 
-# In[21]:
+# In[20]:
 
 
 weather["maxWd"].fillna(method='ffill', limit=1,inplace=True)
 
 
-# In[22]:
+# In[21]:
 
 
 weather[weather["maxWd"].isnull() == True]
 
 
-# In[23]:
+# In[22]:
 
 
 weather["maxWd"].fillna(method='bfill', limit=1,inplace=True)
 
 
-# In[24]:
+# In[23]:
 
 
 #nan value 제거 완료
 weather.isnull().sum()
 
 
-# In[137]:
+# In[24]:
 
 
 #Aotizhongxin의 결측값
 beijing[beijing["station"]=="Aotizhongxin"].isnull().sum()
 
 
-# In[38]:
+# In[25]:
 
 
 #beijing 데이터의 총 결측값
 beijing.isnull().sum()
 
 
-# In[39]:
+# In[26]:
 
 
 #weather와 같은 과정 진행
 beijing.corr()
 
 
-# In[25]:
+# In[27]:
 
 
 sns.heatmap(beijing.corr(), annot=True, fmt='0.2f')
@@ -254,7 +254,7 @@ plt.title('Beijing', fontsize=20)
 plt.show()
 
 
-# In[26]:
+# In[67]:
 
 
 #categorical value를 encoding, 해당 데이터의 경우 labelencoding보다 onehotencoding이 더 적합
@@ -262,28 +262,34 @@ plt.show()
 ohe = OneHotEncoder()
 station_oh = ohe.fit_transform(beijing["station"].values.reshape(-1,1)).toarray()
 beijing_oh = beijing.copy()
-station_oh = pd.DataFrame(station_oh,columns=beijing["station"].unique())
+station_oh = pd.DataFrame(station_oh,columns=ohe.categories_[0])
 
 
-# In[27]:
+# In[68]:
 
 
 station_oh
 
 
-# In[28]:
+# In[69]:
 
 
 beijing_oh.drop(columns="station",inplace=True)
 
 
-# In[29]:
+# In[70]:
 
 
 beijing_oh = pd.concat([beijing_oh,station_oh],axis=1)
 
 
-# In[30]:
+# In[71]:
+
+
+beijing_oh
+
+
+# In[72]:
 
 
 #풍향은 categorical value, numerical value로 변환해야 corr 파악 후 예측할 수 있는데 nan값이 있기 때문에 처리가 난해..
@@ -291,36 +297,42 @@ beijing_oh = pd.concat([beijing_oh,station_oh],axis=1)
 beijing_oh["wd"].fillna(beijing_oh["wd"].value_counts().index[beijing_oh["wd"].value_counts().argmax()],inplace=True)
 
 
-# In[31]:
+# In[73]:
 
 
 beijing_oh["wd"].isnull().sum()
 
 
-# In[32]:
+# In[74]:
 
 
 #nan value를 채운 후 onehotencoding 
 wd_oh = ohe.fit_transform(beijing_oh["wd"].values.reshape(-1,1)).toarray()
-wd_oh = pd.DataFrame(wd_oh,columns=beijing_oh["wd"].unique())
+wd_oh = pd.DataFrame(wd_oh,columns=ohe.categories_[0])
 beijing_oh = pd.concat([beijing_oh,wd_oh],axis=1)
 beijing_oh.drop(columns="wd",inplace=True)
 
 
-# In[33]:
+# In[75]:
 
 
 beijing_oh.columns
 
 
-# In[34]:
+# In[76]:
+
+
+beijing_oh
+
+
+# In[77]:
 
 
 #encoding 후 nan value 다시 측정 
 beijing_oh.isnull().sum()
 
 
-# In[35]:
+# In[78]:
 
 
 #weather와 같은 과정으로 결측값 채우기 진행
@@ -328,7 +340,7 @@ beijing_oh.isnull().sum()
 beijing.corr()
 
 
-# In[36]:
+# In[79]:
 
 
 sns.heatmap(beijing.corr(), annot=True, fmt='0.2f')
@@ -336,7 +348,7 @@ plt.title('Beijing', fontsize=20)
 plt.show()
 
 
-# In[111]:
+# In[80]:
 
 
 #predict PM2.5 - using PM10, NO2, CO 
@@ -346,13 +358,13 @@ pred_y = linear.predict(beijing_oh[["PM10","SO2","NO2","CO"]].dropna(how="any"))
 beijing_oh["PM2.5"].fillna(pd.Series(pred_y), inplace=True)
 
 
-# In[112]:
+# In[81]:
 
 
 beijing_oh.isnull().sum()#667개의 예측되지 않은 값들
 
 
-# In[116]:
+# In[82]:
 
 
 #predict PM10 -also using PM2.5,SO2 NO2, CO
@@ -364,7 +376,7 @@ beijing_oh["PM10"].fillna(pd.Series(pred_y), inplace=True)
 beijing_oh.isnull().sum()  #478개의 예측되지 않은 값들
 
 
-# In[119]:
+# In[83]:
 
 
 #predict SO2 -also using PM2.5, PM10, NO2, CO
@@ -378,7 +390,7 @@ beijing_oh["SO2"].fillna(beijing_oh["SO2"].median(), inplace=True)
 beijing_oh.isnull().sum() 
 
 
-# In[121]:
+# In[84]:
 
 
 #predict NO2 -also using PM2.5,PM10,SO2,CO
@@ -390,7 +402,7 @@ beijing_oh["NO2"].fillna(beijing_oh["NO2"].median(), inplace=True)
 beijing_oh.isnull().sum() 
 
 
-# In[124]:
+# In[85]:
 
 
 #predict CO -also using PM2.5,PM10,SO2,NO2
@@ -402,7 +414,7 @@ beijing_oh["CO"].fillna(pd.Series(pred_y), inplace=True)
 beijing_oh.isnull().sum()  #901개의 예측되지 않은 값들
 
 
-# In[127]:
+# In[86]:
 
 
 #predict O3 - using NO2,TEMP,PRES
@@ -414,7 +426,7 @@ beijing_oh["O3"].fillna(beijing_oh["O3"].median(), inplace=True)
 beijing_oh.isnull().sum() 
 
 
-# In[129]:
+# In[87]:
 
 
 #predict TEMP - using O3,PRES,DEWP
@@ -426,7 +438,7 @@ beijing_oh["TEMP"].fillna(pd.Series(pred_y), inplace=True)
 beijing_oh.isnull().sum() 
 
 
-# In[131]:
+# In[88]:
 
 
 #predict PRES - using O3,TEMP,DEWP
@@ -438,7 +450,7 @@ beijing_oh["PRES"].fillna(pd.Series(pred_y), inplace=True)
 beijing_oh.isnull().sum() 
 
 
-# In[133]:
+# In[89]:
 
 
 #predict DEWP - using TEMP,PRES
@@ -450,7 +462,7 @@ beijing_oh["DEWP"].fillna(pd.Series(pred_y), inplace=True)
 beijing_oh.isnull().sum() 
 
 
-# In[134]:
+# In[90]:
 
 
 #predict RAIN 상관관계가 다 낮음,  ffil,limit=1 and bfil,limit=1
@@ -458,19 +470,19 @@ beijing_oh[beijing_oh["RAIN"].isnull() == True]
 beijing_oh["RAIN"].fillna(method='ffill', limit=1,inplace=True)
 
 
-# In[135]:
+# In[91]:
 
 
 beijing_oh["RAIN"].fillna(method='bfill', limit=1,inplace=True)
 
 
-# In[136]:
+# In[92]:
 
 
 beijing_oh[beijing_oh["RAIN"].isnull() == True]
 
 
-# In[240]:
+# In[93]:
 
 
 #RAIN과 WSPM - 지리적 위치가 가까운 구역을 참조하여 nan value 채우기
@@ -486,14 +498,14 @@ beijing_oh[beijing_oh["RAIN"].isnull() == True]
 #지리적 위치가 가까운 구역을 참조하여 nan value 채우기 불가능..
 
 
-# In[137]:
+# In[94]:
 
 
 #연속된 nan value는 median으로 채우기, median = 0.0..
 beijing_oh["RAIN"].fillna(beijing_oh["RAIN"].median(),inplace=True)
 
 
-# In[138]:
+# In[95]:
 
 
 #precit WSPM 상관관계가 다 낮음, ffil,limit=1 and bfil,limit=1
@@ -503,20 +515,20 @@ beijing_oh["WSPM"].fillna(method='bfill', limit=1,inplace=True)
 beijing_oh[beijing_oh["WSPM"].isnull() == True]
 
 
-# In[139]:
+# In[96]:
 
 
 #연속된 nan value는 median으로 채우기, median = 1.4..
 beijing_oh["WSPM"].fillna(beijing_oh["WSPM"].median(),inplace=True)
 
 
-# In[140]:
+# In[97]:
 
 
 beijing_oh.isnull().sum() 
 
 
-# In[141]:
+# In[98]:
 
 
 #남은 nan value - PM2.5 667, PM10 478,CO 901
@@ -525,7 +537,7 @@ beijing_oh[beijing_oh["PM10"].isnull() == True]
 beijing_oh[beijing_oh["CO"].isnull() == True]
 
 
-# In[142]:
+# In[99]:
 
 
 #ffil,limit=1 and bfil,limit=1으로 채우기
@@ -535,14 +547,14 @@ beijing_oh["PM2.5"].fillna(method='bfill', limit=1,inplace=True)
 beijing_oh[beijing_oh["PM2.5"].isnull() == True]
 
 
-# In[143]:
+# In[100]:
 
 
 #연속된 nan value는 median으로 채우기, median = 1.4..
 beijing_oh["PM2.5"].fillna(beijing_oh["PM2.5"].median(),inplace=True)
 
 
-# In[144]:
+# In[101]:
 
 
 #ffil,limit=1 and bfil,limit=1으로 채우기
@@ -554,7 +566,7 @@ beijing_oh[beijing_oh["PM10"].isnull() == True]
 beijing_oh["PM10"].fillna(beijing_oh["PM10"].median(),inplace=True)
 
 
-# In[145]:
+# In[102]:
 
 
 #ffil,limit=1 and bfil,limit=1으로 채우기
@@ -566,26 +578,26 @@ beijing_oh[beijing_oh["CO"].isnull() == True]
 beijing_oh["CO"].fillna(beijing_oh["CO"].median(),inplace=True)
 
 
-# In[146]:
+# In[103]:
 
 
 #결측값 채우기 완료
 beijing_oh.isnull().sum()
 
 
-# In[276]:
+# In[104]:
 
 
 clean_beijing = beijing_oh.copy()
 
 
-# In[280]:
+# In[105]:
 
 
 clean_beijing.columns
 
 
-# In[311]:
+# In[106]:
 
 
 std_beijing = pd.DataFrame(StandardScaler().fit_transform(clean_beijing.iloc[:,:11]),columns=clean_beijing.iloc[:,:11].columns)
@@ -594,7 +606,7 @@ ma_beijing = pd.DataFrame(MaxAbsScaler().fit_transform(clean_beijing.iloc[:,:11]
 rb_beijing = pd.DataFrame(RobustScaler().fit_transform(clean_beijing.iloc[:,:11]),columns=clean_beijing.iloc[:,:11].columns)
 
 
-# In[312]:
+# In[107]:
 
 
 std_beijing = pd.concat([std_beijing,clean_beijing.iloc[:,11:]],axis=1,ignore_index = True)
@@ -607,7 +619,7 @@ ma_beijing.columns=clean_beijing.columns
 rb_beijing.columns=clean_beijing.columns
 
 
-# In[314]:
+# In[108]:
 
 
 clean_beijing
@@ -617,35 +629,35 @@ ma_beijing
 rb_beijing
 
 
-# In[154]:
+# In[109]:
 
 
 std_weather = pd.DataFrame(StandardScaler().fit_transform(weather.drop(columns="tm")),columns=weather.drop(columns="tm").columns)
 std_weather["tm"]=weather["tm"]
 
 
-# In[158]:
+# In[110]:
 
 
 mm_weather = pd.DataFrame(MinMaxScaler().fit_transform(weather.drop(columns="tm")),columns=weather.drop(columns="tm").columns)
 mm_weather["tm"]=weather["tm"]
 
 
-# In[159]:
+# In[111]:
 
 
 ma_weather = pd.DataFrame(MaxAbsScaler().fit_transform(weather.drop(columns="tm")),columns=weather.drop(columns="tm").columns)
 ma_weather["tm"]=weather["tm"]
 
 
-# In[160]:
+# In[112]:
 
 
 rb_weather = pd.DataFrame(RobustScaler().fit_transform(weather.drop(columns="tm")),columns=weather.drop(columns="tm").columns)
 rb_weather["tm"]=weather["tm"]
 
 
-# In[161]:
+# In[113]:
 
 
 std_weather
@@ -654,26 +666,32 @@ ma_weather
 rb_weather
 
 
-# In[164]:
+# In[114]:
 
 
 #서울 데이터 onehotencoding for MSRSTE_NM
 ohe = OneHotEncoder()
 Nm_oh = ohe.fit_transform(seoul["MSRSTE_NM"].values.reshape(-1,1)).toarray()
 seoul_oh = seoul.copy()
-Nm_oh = pd.DataFrame(Nm_oh,columns=seoul["MSRSTE_NM"].unique())
+Nm_oh = pd.DataFrame(Nm_oh,columns=ohe.categories_[0])
 Nm_oh
 seoul_oh.drop(columns="MSRSTE_NM",inplace=True)
 seoul_oh = pd.concat([seoul_oh,Nm_oh],axis=1)
 
 
-# In[167]:
+# In[116]:
+
+
+seoul_oh["영등포구"]
+
+
+# In[118]:
 
 
 seoul_oh
 
 
-# In[209]:
+# In[119]:
 
 
 std_seoul = pd.DataFrame(StandardScaler().fit_transform(seoul_oh.iloc[:,1:7]),columns=seoul_oh.iloc[:,1:7].columns)
@@ -682,13 +700,13 @@ ma_seoul = pd.DataFrame(MaxAbsScaler().fit_transform(seoul_oh.iloc[:,1:7]),colum
 rb_seoul = pd.DataFrame(RobustScaler().fit_transform(seoul_oh.iloc[:,1:7]),columns=seoul_oh.iloc[:,1:7].columns)
 
 
-# In[210]:
+# In[120]:
 
 
 col = seoul_oh.iloc[:,1:7].columns.append(seoul_oh.drop(columns=std_seoul.columns).columns)
 
 
-# In[211]:
+# In[121]:
 
 
 std_seoul = pd.concat([std_seoul,seoul_oh.drop(columns=std_seoul.columns)],axis=1,ignore_index = True)
@@ -701,7 +719,7 @@ ma_seoul.columns=col
 rb_seoul.columns=col
 
 
-# In[214]:
+# In[122]:
 
 
 std_seoul
