@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[302]:
+# In[1]:
 
 
 from IPython.core.interactiveshell import InteractiveShell
@@ -25,129 +25,10 @@ import graphviz
 from sklearn.tree import export_graphviz
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import mean_squared_error
+from preprocessing import Preprocessing
 
 
-# In[2]:
-
-
-class preprocessing :
-    #make linear regression model and fit, return linear regression model and score
-    #df : dataframe
-    #columns : columns list for make linear regression model
-    #target : target feature name
-    #test : train test split's test_size parameter
-    #random= : train test split's random_state parameter
-    #return : linear regression model and score
-    def reg_score(self,df,columns,target,test = 0.2,random=0):
-        t_col = columns.copy()
-        t_col.append(target)
-        data = df[t_col]
-        clean_df = data.dropna(how="any")
-        train_X, test_X, train_y, test_y = train_test_split(
-            clean_df[columns],clean_df[target],test_size=test,random_state=random)
-        linear = LinearRegression().fit(train_X,train_y)
-        return linear,linear.score(test_X,test_y)
-
-
-def makeDecisionTree(citerion, x_train, y_train,depthNum):
-    if depthNum>0:
-        clf = tree.DecisionTreeClassifier(criterion=citerion, max_depth=depthNum)
-    else:
-        clf = tree.DecisionTreeClassifier(criterion=citerion)
-
-    clf.fit(x_train, y_train)
-
-    return clf
-
-def printTreeGraph(model):
-    dot_data = tree.export_graphviz(model,
-                                    out_file=None,
-                                    feature_names=feature_name,
-                                    class_names=target_name,
-                                    filled=True,
-                                    rounded=True,
-                                    special_characters=True)
-    graph = graphviz.Source(dot_data)
-    print(graph)
-
-
-def foldValidatation(model,train_x,train_y,foldNum):
-    cv_scores=cross_val_score(model,train_x,train_y,cv=foldNum)
-    print(cv_scores)
-    print("cv_scores mean: {}".format(np.mean(cv_scores)))
-    # print(cross_validate(model, train_x, train_y, scoring=['accuracy', 'roc_auc'], return_train_score=True))
-
-def treeGridSearch(x_train,y_train):
-    tree_params = {
-        "criterion": ["gini","entropy"],
-        "splitter": ["best", "random"],
-        "max_depth": [2, 6, 10, 14],
-        "max_features": ["auto", "sqrt", "log2", 5, None]
-    }
-    tree_grid = GridSearchCV(tree.DecisionTreeClassifier(random_state=12),
-                             tree_params,
-                             scoring="neg_mean_squared_error",
-                             verbose=1,
-                             n_jobs=-1)
-    tree_grid.fit(x_train, y_train)
-    best_param=tree_grid.best_params_
-    print("Best parameter(Decision Tree) : ")
-    print(best_param)
-    print("Best score(Decision Tree) : ")
-    print(tree_grid.best_score_)
-
-def baggingGridSearch(best_tree):
-    bagging_params = {
-        "n_estimators": [50, 100, 150],
-        "max_samples": [0.25, 0.5, 1.0],
-        "max_features": [0.25, 0.5, 1.0],
-        "bootstrap": [True, False],
-        "bootstrap_features": [True, False]
-    }
-    best_bagging = GridSearchCV(BaggingClassifier(best_tree),
-                                   bagging_params,
-                                   cv=4,
-                                   verbose=1,
-                                   n_jobs=-1)
-
-    best_bagging.fit(train_x, train_y)
-    print("Best parameter(Bagging) : ")
-    print(best_bagging.best_params_)
-    print("Best score(Bagging) : ")
-    print(best_bagging.best_score_)
-
-    print(foldValidatation(best_bagging, test_x, test_y, 3))
-
-    # predict with train data and get score
-    best_bagging.fit(train_x, train_y)
-    best_pred = best_bagging.predict(train_x)
-
-    print("------------train_score---------------")
-    print(best_bagging.score(train_x, train_y))
-
-    # predict with valid data and get score
-    best_bagging.fit(valid_x, valid_y)
-    best_pred = best_bagging.predict(valid_x)
-    print("------------std_train_score---------------")
-    print(best_bagging.score(valid_x, valid_y))
-
-    # predict with test data and get score
-    best_bagging.fit(test_x, test_y)
-    best_pred = best_bagging.predict(test_x)
-    print("------------std_test_score---------------")
-    print(best_bagging.score(test_x, test_y))
-
-
-def ordinalEncode_category(arr,str):
-    enc=preprocessing.OrdinalEncoder()
-    encodedData=enc.fit_transform(arr[[str]])
-    column_name = str + " ordinalEncoded"
-    arr[column_name] = encodedData
-    return arr
-    
-
-
-# In[4]:
+# In[3]:
 
 
 #*****Data preprocessing*****
@@ -171,7 +52,7 @@ seoul = pd.read_csv("seoul_air_20130301-20170228.csv")
 weather = pd.read_csv("weather.csv")
 
 
-# In[5]:
+# In[4]:
 
 
 #*Data restructuring
@@ -190,7 +71,7 @@ beijing.drop(columns="No",inplace = True)
 beijing
 
 
-# In[6]:
+# In[5]:
 
 
 #change year, month, day, hour columns to date format 
@@ -202,13 +83,13 @@ beijing["Date"] = tt
 beijing.drop(columns=["year","month","day","hour"],inplace=True)
 
 
-# In[7]:
+# In[6]:
 
 
 beijing
 
 
-# In[8]:
+# In[7]:
 
 
 beijing.info()
@@ -216,14 +97,14 @@ seoul.info()
 weather.info()
 
 
-# In[9]:
+# In[8]:
 
 
 weather
 seoul
 
 
-# In[10]:
+# In[9]:
 
 
 #change MSRDT column to date format 
@@ -232,14 +113,14 @@ seoul["MSRDT"] = date_s.apply(lambda x: datetime.strptime(x, "%Y%m%d%H%M"))
 seoul
 
 
-# In[11]:
+# In[10]:
 
 
 weather["tm"] = weather["tm"].apply(lambda _: datetime.strptime(_,"%Y-%m-%d"))
 weather.info()
 
 
-# In[12]:
+# In[11]:
 
 
 #*Data value changes
@@ -249,28 +130,29 @@ weather.isnull().sum()
 beijing.isnull().sum()
 
 
-# In[13]:
+# In[12]:
 
 
-#weather - sumRn이 nan value이면 비가 오지 않은 날이므로 0.0으로 fill
+#weather - If sumRn is nan value, it's a non-rainy day, so fill it at 0.0.
 weather["sumRn"].fillna(0.0,inplace=True)
 
 
-# In[14]:
+# In[13]:
 
 
 weather.isnull().sum()
 
 
-# In[15]:
+# In[14]:
 
 
-#날씨 결측값을 가장 큰 양의 상관관계를 갖는 column을 파악한 뒤 regression으로 모델 학습 후 예측값으로 채우기
-#0.5 정도의 값이 얻어지면 : 강력한 양(+)의 상관. 변인 x 가 증가하면 변인 y 가 증가한다.
+#Fill weather missing values with predictions after learning the model with regression 
+#after determining which column has the highly correlation.
+#If a value of about 0.5 is obtained: a strong positive (+) correlation. As the variable x increases, the variable y increases.
 weather.corr()
 
 
-# In[16]:
+# In[15]:
 
 
 #corr() heatmap
@@ -279,82 +161,77 @@ plt.title('weather', fontsize=20)
 plt.show()
 
 
-# In[17]:
+# In[16]:
 
 
-#sumGsr과 avgTs는 0.5,sumGsr과 minRhm는 -0.55 sumGsr과 avgTs는 0.4
+#sumGsr-avgTs : 0.5
+#sumGsr-minRhm : -0.55
+#sumGsr-avgTs : 0.4
 #sumGsr-avgTs --> accuray = 0.2..
 #sumGsr-avgTsm,minRhm --> accuray = 0.6
 #sumGsr-avgTsm,minRhm,avgTa --> accuracy = 0.72
 #linear regression 
-linear,score = preprocessing().reg_score(weather,["avgTs","minRhm","avgTa"],"sumGsr")
+linear,score = Preprocessing().reg_score(weather,["avgTs","minRhm","avgTa"],"sumGsr")
 score
 pred_y = linear.predict(weather.loc[:, ["avgTs","minRhm","avgTa"]])
 weather['sumGsr'].fillna(pd.Series(pred_y), inplace=True)
 
 
-# In[18]:
+# In[17]:
 
 
 weather.isnull().sum()
+
+
+# In[18]:
+
+
+#maxWd-sumGsr : 0.2
+#Since maxwd does not show significant correlation with other features, 
+#maxwd fills it with data from the previous day and the next day.
+weather[weather["maxWd"].isnull() == True]
 
 
 # In[19]:
 
 
-#// maxWd와 sumGsr은 0.2,
-#0.2 정도의 값이 얻어지면 : 너무 약해서 의심스러운 양(+)의 상관
-# maxWd는 다른 feature들과도 유의미한 상관관계가 나타나지 않으므로 maxWd는 전날 데이터와 다음날의 데이터로 채운다. 
-weather[weather["maxWd"].isnull() == True]
+weather["maxWd"].fillna(method='ffill', limit=1,inplace=True)
 
 
 # In[20]:
 
 
-weather["maxWd"].fillna(method='ffill', limit=1,inplace=True)
+weather[weather["maxWd"].isnull() == True]
 
 
 # In[21]:
 
 
-weather[weather["maxWd"].isnull() == True]
+weather["maxWd"].fillna(method='bfill', limit=1,inplace=True)
 
 
 # In[22]:
 
 
-weather["maxWd"].fillna(method='bfill', limit=1,inplace=True)
+#cleaned data
+weather.isnull().sum()
 
 
 # In[23]:
 
 
-#nan value 제거 완료
-weather.isnull().sum()
+#beijing data's nan value
+beijing.isnull().sum()
 
 
 # In[24]:
 
 
-#Aotizhongxin의 결측값
-beijing[beijing["station"]=="Aotizhongxin"].isnull().sum()
-
-
-# In[25]:
-
-
-#beijing 데이터의 총 결측값
-beijing.isnull().sum()
-
-
-# In[26]:
-
-
-#weather와 같은 과정 진행
+#Proceed with the same process as Weather.
 beijing.corr()
 
 
-# In[27]:
+# In[25]:
 
 
 sns.heatmap(beijing.corr(), annot=True, fmt='0.2f')
@@ -362,10 +239,9 @@ plt.title('Beijing', fontsize=20)
 plt.show()
 
 
-# In[28]:
+# In[26]:
 
 
-#categorical value를 encoding, 해당 데이터의 경우 labelencoding보다 onehotencoding이 더 적합
 #onehotencoding for station, wd columns
 ohe = OneHotEncoder()
 station_oh = ohe.fit_transform(beijing["station"].values.reshape(-1,1)).toarray()
@@ -373,82 +249,79 @@ beijing_oh = beijing.copy()
 station_oh = pd.DataFrame(station_oh,columns=ohe.categories_[0])
 
 
-# In[29]:
+# In[27]:
 
 
 station_oh
 
 
-# In[30]:
+# In[28]:
 
 
 beijing_oh.drop(columns="station",inplace=True)
 
 
-# In[31]:
+# In[29]:
 
 
 beijing_oh = pd.concat([beijing_oh,station_oh],axis=1)
 
 
-# In[32]:
+# In[30]:
 
 
 beijing_oh
 
 
-# In[33]:
+# In[31]:
 
 
-#풍향은 categorical value, numerical value로 변환해야 corr 파악 후 예측할 수 있는데 nan값이 있기 때문에 처리가 난해..
-#풍향은 unique를 통해 max 값으로 채운다.
+#The wind direction is filled with max values.
 beijing_oh["wd"].fillna(beijing_oh["wd"].value_counts().index[beijing_oh["wd"].value_counts().argmax()],inplace=True)
 
 
-# In[34]:
+# In[32]:
 
 
 beijing_oh["wd"].isnull().sum()
 
 
-# In[35]:
+# In[33]:
 
 
-#nan value를 채운 후 onehotencoding 
+#onehotencoding after fill nan values.
 wd_oh = ohe.fit_transform(beijing_oh["wd"].values.reshape(-1,1)).toarray()
 wd_oh = pd.DataFrame(wd_oh,columns=ohe.categories_[0])
 beijing_oh = pd.concat([beijing_oh,wd_oh],axis=1)
 beijing_oh.drop(columns="wd",inplace=True)
 
 
-# In[36]:
+# In[34]:
 
 
 beijing_oh.columns
 
 
-# In[37]:
+# In[35]:
 
 
 beijing_oh
 
 
-# In[38]:
+# In[36]:
 
 
-#encoding 후 nan value 다시 측정 
 beijing_oh.isnull().sum()
 
 
-# In[39]:
+# In[37]:
 
 
-#weather와 같은 과정으로 결측값 채우기 진행
-#beijing 데이터의 상관관계 파악
+#Proceed to fill missing values with the same process as weather data
 beijing.corr()
 
 
-# In[40]:
+# In[38]:
 
 
 sns.heatmap(beijing.corr(), annot=True, fmt='0.2f')
@@ -460,7 +333,7 @@ plt.show()
 
 
 #predict PM2.5 - using PM10, NO2, CO 
-linear,score = preprocessing().reg_score(beijing_oh,["PM10","SO2","NO2","CO"],"PM2.5",0.2,1)
+linear,score = Preprocessing().reg_score(beijing_oh,["PM10","SO2","NO2","CO"],"PM2.5",0.2,1)
 score
 pred_y = linear.predict(beijing_oh[["PM10","SO2","NO2","CO"]].dropna(how="any"))
 beijing_oh["PM2.5"].fillna(pd.Series(pred_y), inplace=True)
@@ -469,252 +342,234 @@ beijing_oh["PM2.5"].fillna(pd.Series(pred_y), inplace=True)
 # In[42]:
 
 
-beijing_oh.isnull().sum()#667개의 예측되지 않은 값들
-
-
-# In[43]:
-
-
-#predict PM10 -also using PM2.5,SO2 NO2, CO
-#linear regression 
-linear,score = preprocessing().reg_score(beijing_oh,["PM2.5","SO2","NO2","CO"],"PM10",0.2,2)
-score
-pred_y = linear.predict(beijing_oh[["PM2.5","SO2","NO2","CO"]].dropna(how="any"))
-beijing_oh["PM10"].fillna(pd.Series(pred_y), inplace=True)
-beijing_oh.isnull().sum()  #478개의 예측되지 않은 값들
+beijing_oh.isnull().sum()
 
 
 # In[44]:
 
 
-#predict SO2 -also using PM2.5, PM10, NO2, CO
+#predict PM10 -also using PM2.5,SO2 NO2, CO
 #linear regression 
-linear,score = preprocessing().reg_score(beijing_oh,["PM2.5","PM10","NO2","CO"],"SO2",0.2,3)
+linear,score = Preprocessing().reg_score(beijing_oh,["PM2.5","SO2","NO2","CO"],"PM10",0.2,2)
 score
-#낮은 score.. SO2는 regression 대신 median으로 nan 값 채우기
-#std_beijing["SO2"].fillna(std_beijing["SO2"].median(), inplace=True)
-#std_beijing.isnull().sum() 
-beijing_oh["SO2"].fillna(beijing_oh["SO2"].median(), inplace=True)
-beijing_oh.isnull().sum() 
-
-
-# In[45]:
-
-
-#predict NO2 -also using PM2.5,PM10,SO2,CO
-#linear regression 
-linear,score = preprocessing().reg_score(beijing_oh,["PM2.5","PM10","SO2","CO"],"NO2",0.2,4)
-score
-#낮은 score.. NO2는 regression 대신 median으로 nan 값 채우기
-beijing_oh["NO2"].fillna(beijing_oh["NO2"].median(), inplace=True)
-beijing_oh.isnull().sum() 
+pred_y = linear.predict(beijing_oh[["PM2.5","SO2","NO2","CO"]].dropna(how="any"))
+beijing_oh["PM10"].fillna(pd.Series(pred_y), inplace=True)
+beijing_oh.isnull().sum()
 
 
 # In[46]:
 
 
-#predict CO -also using PM2.5,PM10,SO2,NO2
+#predict SO2 -also using PM2.5, PM10, NO2, CO
 #linear regression 
-linear,score = preprocessing().reg_score(beijing_oh,["PM2.5","PM10","SO2","NO2"],"CO",0.2,5)
+linear,score = Preprocessing().reg_score(beijing_oh,["PM2.5","PM10","NO2","CO"],"SO2",0.2,3)
 score
-pred_y = linear.predict(beijing_oh[["PM2.5","PM10","SO2","NO2"]].dropna(how="any"))
-beijing_oh["CO"].fillna(pd.Series(pred_y), inplace=True)
-beijing_oh.isnull().sum()  #901개의 예측되지 않은 값들
-
-
-# In[47]:
-
-
-#predict O3 - using NO2,TEMP,PRES
-#linear regression 
-linear,score = preprocessing().reg_score(beijing_oh,["NO2","TEMP","PRES"],"O3",0.2,6)
-score
-#낮은 score.. O3는 regression 대신 median으로 nan 값 채우기
-beijing_oh["O3"].fillna(beijing_oh["O3"].median(), inplace=True)
+#Low score, SO2 fills nan values with median instead of regression
+beijing_oh["SO2"].fillna(beijing_oh["SO2"].median(), inplace=True)
 beijing_oh.isnull().sum() 
 
 
 # In[48]:
 
 
-#predict TEMP - using O3,PRES,DEWP
+#predict NO2 -also using PM2.5,PM10,SO2,CO
 #linear regression 
-linear,score = preprocessing().reg_score(beijing_oh,["O3","PRES","DEWP"],"TEMP",0.2,7)
+linear,score = Preprocessing().reg_score(beijing_oh,["PM2.5","PM10","SO2","CO"],"NO2",0.2,4)
 score
-pred_y = linear.predict(beijing_oh[["O3","PRES","DEWP"]].dropna(how="any"))
-beijing_oh["TEMP"].fillna(pd.Series(pred_y), inplace=True)
-beijing_oh.isnull().sum() 
-
-
-# In[49]:
-
-
-#predict PRES - using O3,TEMP,DEWP
-#linear regression 
-linear,score = preprocessing().reg_score(beijing_oh,["O3","TEMP","DEWP"],"PRES",0.2,8)
-score
-pred_y = linear.predict(beijing_oh[["O3","TEMP","DEWP"]].dropna(how="any"))
-beijing_oh["PRES"].fillna(pd.Series(pred_y), inplace=True)
+#Low score, NO2 fills nan values with median instead of regression
+beijing_oh["NO2"].fillna(beijing_oh["NO2"].median(), inplace=True)
 beijing_oh.isnull().sum() 
 
 
 # In[50]:
 
 
+#predict CO -also using PM2.5,PM10,SO2,NO2
+#linear regression 
+linear,score = Preprocessing().reg_score(beijing_oh,["PM2.5","PM10","SO2","NO2"],"CO",0.2,5)
+score
+pred_y = linear.predict(beijing_oh[["PM2.5","PM10","SO2","NO2"]].dropna(how="any"))
+beijing_oh["CO"].fillna(pd.Series(pred_y), inplace=True)
+beijing_oh.isnull().sum()
+
+
+# In[51]:
+
+
+#predict O3 - using NO2,TEMP,PRES
+#linear regression 
+linear,score = Preprocessing().reg_score(beijing_oh,["NO2","TEMP","PRES"],"O3",0.2,6)
+score
+##Low score, O3 fills nan values with median instead of regression
+beijing_oh["O3"].fillna(beijing_oh["O3"].median(), inplace=True)
+beijing_oh.isnull().sum() 
+
+
+# In[53]:
+
+
+#predict TEMP - using O3,PRES,DEWP
+#linear regression 
+linear,score = Preprocessing().reg_score(beijing_oh,["O3","PRES","DEWP"],"TEMP",0.2,7)
+score
+pred_y = linear.predict(beijing_oh[["O3","PRES","DEWP"]].dropna(how="any"))
+beijing_oh["TEMP"].fillna(pd.Series(pred_y), inplace=True)
+beijing_oh.isnull().sum() 
+
+
+# In[55]:
+
+
+#predict PRES - using O3,TEMP,DEWP
+#linear regression 
+linear,score = Preprocessing().reg_score(beijing_oh,["O3","TEMP","DEWP"],"PRES",0.2,8)
+score
+pred_y = linear.predict(beijing_oh[["O3","TEMP","DEWP"]].dropna(how="any"))
+beijing_oh["PRES"].fillna(pd.Series(pred_y), inplace=True)
+beijing_oh.isnull().sum() 
+
+
+# In[56]:
+
+
 #predict DEWP - using TEMP,PRES
 #linear regression 
-linear,score = preprocessing().reg_score(beijing_oh,["TEMP","PRES"],"DEWP",0.2,9)
+linear,score = Preprocessing().reg_score(beijing_oh,["TEMP","PRES"],"DEWP",0.2,9)
 score
 pred_y = linear.predict(beijing_oh[["TEMP","PRES"]].dropna(how="any"))
 beijing_oh["DEWP"].fillna(pd.Series(pred_y), inplace=True)
 beijing_oh.isnull().sum() 
 
 
-# In[51]:
+# In[57]:
 
 
-#predict RAIN 상관관계가 다 낮음,  ffil,limit=1 and bfil,limit=1
+#All columns have low correlation with RAIN
+#ffil,limit=1 and bfil,limit=1
 beijing_oh[beijing_oh["RAIN"].isnull() == True]
 beijing_oh["RAIN"].fillna(method='ffill', limit=1,inplace=True)
 
 
-# In[52]:
+# In[58]:
 
 
 beijing_oh["RAIN"].fillna(method='bfill', limit=1,inplace=True)
 
 
-# In[53]:
+# In[59]:
 
 
 beijing_oh[beijing_oh["RAIN"].isnull() == True]
 
 
-# In[54]:
+# In[60]:
 
 
-#RAIN과 WSPM - 지리적 위치가 가까운 구역을 참조하여 nan value 채우기
-#https://link.springer.com/article/10.1007/s00521-018-3532-z/figures/1
-#dingling changping rain 결측값 51씩 wspm 43씩
-#dongsi tiantan guanyuan wanshouxigong  nongzhanguan aotizhongxin wanliu rain 결측값 20씩 wspm 14씩
-#shunyi huairou rain 결측값 51,55씩 wspm 44,49
-# gucheng rain 결측값 43씩 wspm 42씩
-
-##다시 분류하면 
-#dongsi tiantan guanyuan wanshouxigong  nongzhanguan aotizhongxin wanliu rain 결측값 20씩 wspm 14씩
-#shunyi huairou  gucheng dingling changping
-#지리적 위치가 가까운 구역을 참조하여 nan value 채우기 불가능..
-
-
-# In[55]:
-
-
-#연속된 nan value는 median으로 채우기, median = 0.0..
 beijing_oh["RAIN"].fillna(beijing_oh["RAIN"].median(),inplace=True)
 
 
-# In[56]:
+# In[61]:
 
 
-#precit WSPM 상관관계가 다 낮음, ffil,limit=1 and bfil,limit=1
+#All columns have low correlation with WSPM
+#ffil,limit=1 and bfil,limit=1
 beijing_oh[beijing_oh["WSPM"].isnull() == True]
 beijing_oh["WSPM"].fillna(method='ffill', limit=1,inplace=True)
 beijing_oh["WSPM"].fillna(method='bfill', limit=1,inplace=True)
 beijing_oh[beijing_oh["WSPM"].isnull() == True]
 
 
-# In[57]:
+# In[62]:
 
 
-#연속된 nan value는 median으로 채우기, median = 1.4..
 beijing_oh["WSPM"].fillna(beijing_oh["WSPM"].median(),inplace=True)
 
 
-# In[58]:
+# In[63]:
 
 
 beijing_oh.isnull().sum() 
 
 
-# In[59]:
+# In[64]:
 
 
-#남은 nan value - PM2.5 667, PM10 478,CO 901
+#Remaining nan value - PM2.5, PM10,CO 
 beijing_oh[beijing_oh["PM2.5"].isnull() == True]
 beijing_oh[beijing_oh["PM10"].isnull() == True]
 beijing_oh[beijing_oh["CO"].isnull() == True]
 
 
-# In[60]:
+# In[65]:
 
 
-#ffil,limit=1 and bfil,limit=1으로 채우기
+#ffil,limit=1 and bfil,limit=1
 beijing_oh[beijing_oh["PM2.5"].isnull() == True]
 beijing_oh["PM2.5"].fillna(method='ffill', limit=1,inplace=True)
 beijing_oh["PM2.5"].fillna(method='bfill', limit=1,inplace=True)
 beijing_oh[beijing_oh["PM2.5"].isnull() == True]
 
 
-# In[61]:
-
-
-#연속된 nan value는 median으로 채우기, median = 1.4..
-beijing_oh["PM2.5"].fillna(beijing_oh["PM2.5"].median(),inplace=True)
-
-
-# In[62]:
-
-
-#ffil,limit=1 and bfil,limit=1으로 채우기
-beijing_oh[beijing_oh["PM10"].isnull() == True]
-beijing_oh["PM10"].fillna(method='ffill', limit=1,inplace=True)
-beijing_oh["PM10"].fillna(method='bfill', limit=1,inplace=True)
-beijing_oh[beijing_oh["PM10"].isnull() == True]
-#연속된 nan value는 median으로 채우기, median = 82.0..
-beijing_oh["PM10"].fillna(beijing_oh["PM10"].median(),inplace=True)
-
-
-# In[63]:
-
-
-#ffil,limit=1 and bfil,limit=1으로 채우기
-beijing_oh[beijing_oh["CO"].isnull() == True]
-beijing_oh["CO"].fillna(method='ffill', limit=1,inplace=True)
-beijing_oh["CO"].fillna(method='bfill', limit=1,inplace=True)
-beijing_oh[beijing_oh["CO"].isnull() == True]
-#연속된 nan value는 median으로 채우기, median = 900..
-beijing_oh["CO"].fillna(beijing_oh["CO"].median(),inplace=True)
-
-
-# In[64]:
-
-
-#결측값 채우기 완료
-beijing_oh.isnull().sum()
-
-
-# In[65]:
-
-
-clean_beijing = beijing_oh.copy()
-
-
 # In[66]:
 
 
-clean_beijing.columns
+beijing_oh["PM2.5"].fillna(beijing_oh["PM2.5"].median(),inplace=True)
 
 
 # In[67]:
 
 
+#ffil,limit=1 and bfil,limit=1
+beijing_oh[beijing_oh["PM10"].isnull() == True]
+beijing_oh["PM10"].fillna(method='ffill', limit=1,inplace=True)
+beijing_oh["PM10"].fillna(method='bfill', limit=1,inplace=True)
+beijing_oh[beijing_oh["PM10"].isnull() == True]
+
+beijing_oh["PM10"].fillna(beijing_oh["PM10"].median(),inplace=True)
+
+
+# In[68]:
+
+
+#ffil,limit=1 and bfil,limit=1
+beijing_oh[beijing_oh["CO"].isnull() == True]
+beijing_oh["CO"].fillna(method='ffill', limit=1,inplace=True)
+beijing_oh["CO"].fillna(method='bfill', limit=1,inplace=True)
+beijing_oh[beijing_oh["CO"].isnull() == True]
+
+beijing_oh["CO"].fillna(beijing_oh["CO"].median(),inplace=True)
+
+
+# In[69]:
+
+
+#cleaned data
+beijing_oh.isnull().sum()
+
+
+# In[70]:
+
+
+clean_beijing = beijing_oh.copy()
+
+
+# In[71]:
+
+
+clean_beijing.columns
+
+
+# In[72]:
+
+
+#scaling dataset with standard, minmax, maxabs,robust scalier
 std_beijing = pd.DataFrame(StandardScaler().fit_transform(clean_beijing.iloc[:,:11]),columns=clean_beijing.iloc[:,:11].columns)
 mm_beijing = pd.DataFrame(MinMaxScaler().fit_transform(clean_beijing.iloc[:,:11]),columns=clean_beijing.iloc[:,:11].columns)
 ma_beijing = pd.DataFrame(MaxAbsScaler().fit_transform(clean_beijing.iloc[:,:11]),columns=clean_beijing.iloc[:,:11].columns)
 rb_beijing = pd.DataFrame(RobustScaler().fit_transform(clean_beijing.iloc[:,:11]),columns=clean_beijing.iloc[:,:11].columns)
 
 
-# In[68]:
+# In[73]:
 
 
 std_beijing = pd.concat([std_beijing,clean_beijing.iloc[:,11:]],axis=1,ignore_index = True)
@@ -727,7 +582,7 @@ ma_beijing.columns=clean_beijing.columns
 rb_beijing.columns=clean_beijing.columns
 
 
-# In[69]:
+# In[74]:
 
 
 clean_beijing
@@ -737,35 +592,35 @@ ma_beijing
 rb_beijing
 
 
-# In[70]:
+# In[75]:
 
 
 std_weather = pd.DataFrame(StandardScaler().fit_transform(weather.drop(columns="tm")),columns=weather.drop(columns="tm").columns)
 std_weather["tm"]=weather["tm"]
 
 
-# In[71]:
+# In[76]:
 
 
 mm_weather = pd.DataFrame(MinMaxScaler().fit_transform(weather.drop(columns="tm")),columns=weather.drop(columns="tm").columns)
 mm_weather["tm"]=weather["tm"]
 
 
-# In[72]:
+# In[77]:
 
 
 ma_weather = pd.DataFrame(MaxAbsScaler().fit_transform(weather.drop(columns="tm")),columns=weather.drop(columns="tm").columns)
 ma_weather["tm"]=weather["tm"]
 
 
-# In[73]:
+# In[78]:
 
 
 rb_weather = pd.DataFrame(RobustScaler().fit_transform(weather.drop(columns="tm")),columns=weather.drop(columns="tm").columns)
 rb_weather["tm"]=weather["tm"]
 
 
-# In[74]:
+# In[79]:
 
 
 std_weather
@@ -774,10 +629,10 @@ ma_weather
 rb_weather
 
 
-# In[75]:
+# In[80]:
 
 
-#서울 데이터 onehotencoding for MSRSTE_NM
+#seoul data onehotencoding for MSRSTE_NM
 ohe = OneHotEncoder()
 Nm_oh = ohe.fit_transform(seoul["MSRSTE_NM"].values.reshape(-1,1)).toarray()
 seoul_oh = seoul.copy()
@@ -787,19 +642,19 @@ seoul_oh.drop(columns="MSRSTE_NM",inplace=True)
 seoul_oh = pd.concat([seoul_oh,Nm_oh],axis=1)
 
 
-# In[76]:
+# In[81]:
 
 
 seoul_oh["영등포구"]
 
 
-# In[77]:
+# In[82]:
 
 
 seoul_oh
 
 
-# In[78]:
+# In[83]:
 
 
 std_seoul = pd.DataFrame(StandardScaler().fit_transform(seoul_oh.iloc[:,1:7]),columns=seoul_oh.iloc[:,1:7].columns)
@@ -808,13 +663,13 @@ ma_seoul = pd.DataFrame(MaxAbsScaler().fit_transform(seoul_oh.iloc[:,1:7]),colum
 rb_seoul = pd.DataFrame(RobustScaler().fit_transform(seoul_oh.iloc[:,1:7]),columns=seoul_oh.iloc[:,1:7].columns)
 
 
-# In[79]:
+# In[84]:
 
 
 col = seoul_oh.iloc[:,1:7].columns.append(seoul_oh.drop(columns=std_seoul.columns).columns)
 
 
-# In[80]:
+# In[85]:
 
 
 std_seoul = pd.concat([std_seoul,seoul_oh.drop(columns=std_seoul.columns)],axis=1,ignore_index = True)
@@ -827,7 +682,7 @@ ma_seoul.columns=col
 rb_seoul.columns=col
 
 
-# In[81]:
+# In[86]:
 
 
 std_seoul
@@ -836,21 +691,14 @@ ma_seoul
 rb_seoul
 
 
-# In[275]:
+# In[87]:
 
 
+#**************data analysis*********************#
+#Create decision Tree,Analysis of features that have the greatest importance in predicting fine dust.
 
 
-
-# In[ ]:
-
-
-#예측 tree 생성, 미세먼지 예측에 가장 큰 중요도를 가지는 feature를 분석.. 
-#서울시 데이터 -> 날짜별 group by, 기상 데이터와 같이 1461행으로 줄임.
-#베이징 데이터 -> 같은 작업 진행
-
-
-# In[84]:
+# In[88]:
 
 
 std_weather
@@ -858,102 +706,98 @@ std_seoul
 std_beijing
 
 
-# In[102]:
+# In[89]:
 
 
+#Seoul data -> group by date, reduced to 1461 lines as shown by weather data.
+#Beijing Data -> the same process.
 std_seoul_group = std_seoul.groupby(std_seoul['MSRDT'].dt.date).mean()
-std_seoul_group = std_seoul_tree.iloc[:,:6]
+std_seoul_group = std_seoul_group.iloc[:,:6]
 
 
-# In[103]:
+# In[90]:
 
 
 std_seoul_group
 
 
-# In[269]:
+# In[91]:
 
 
 std_beijing_group = std_beijing.iloc[:,:12].groupby(std_beijing['Date'].dt.date).mean()
-#베이징 데이터의 경우 풍향 데이터 분석을 위해 최대 풍향 (횟수)를 구하여 data frame을 이어줌. 
+#Maximum wind direction (number of times) is obtained for wind direction data analysis.
 std_beijing_wd = std_beijing.iloc[:,24:].groupby(std_beijing['Date'].dt.date).sum().idxmax(axis=1)
 std_beijing_wd = pd.DataFrame(std_beijing_wd,columns = ["WD"])
 
 
-# In[270]:
+# In[92]:
 
 
 std_beijing_group = pd.concat([std_beijing_group,std_beijing_wd,],axis=1)
 
 
-# In[271]:
+# In[93]:
 
 
-#풍향 데이터 onehotencoding 
+#wind direction onehotencoding 
 ohe = OneHotEncoder()
 group_wd_oh = ohe.fit_transform(std_beijing_group["WD"].values.reshape(-1,1)).toarray()
 group_wd_oh = pd.DataFrame(group_wd_oh,index =std_beijing_group.index , columns=ohe.categories_[0])
 std_beijing_group = pd.concat([std_beijing_group,group_wd_oh],axis = 1)
 
 
-# In[272]:
+# In[94]:
 
 
 std_beijing_group.drop(columns="WD",inplace = True)
 
 
-# In[273]:
+# In[95]:
 
 
 std_beijing_group
 
 
-# In[274]:
+# In[96]:
 
 
 std_weather.index = std_weather["tm"]
 std_weather.drop(columns="tm",inplace= True)
 
 
-# In[275]:
+# In[97]:
 
 
 std_weather
 
 
-# In[276]:
+# In[98]:
 
 
-#서울 기상 데이터 + 대기오염 데이터
+#Merge seoul weather dataset and seoul air pollution dataset
 std_tree = pd.concat([std_weather,std_seoul_group],axis = 1)
 
 
-# In[277]:
+# In[99]:
 
 
 std_tree
 
 
-# In[278]:
+# In[100]:
 
 
-#column명 변경 후 데이터 합치기 
+#Column name change, and merge datasets
 std_beijing_group = std_beijing_group.add_prefix("beijing_")
 
 
-# In[280]:
+# In[101]:
 
 
 std_tree = pd.concat([std_beijing_group,std_tree],axis = 1)
 
 
-# In[281]:
-
-
-std_tree
-
-
-# In[283]:
+# In[103]:
 
 
 std_target1 = std_tree["PM10"]
@@ -961,7 +805,7 @@ std_target2 = std_tree["PM25"]
 std_data = std_tree.drop(columns=["PM10","PM25"])
 
 
-# In[287]:
+# In[104]:
 
 
 #split train , test data for performance
@@ -970,7 +814,7 @@ std_train_X1,std_test_X1,std_train_y1,std_test_y1 = train_test_split(std_data,st
 std_train_X1,std_valid_X1,std_train_y1,std_valid_y1 = train_test_split(std_train_X1,std_train_y1,test_size = 0.3,random_state = 11)
 
 
-# In[288]:
+# In[105]:
 
 
 #split train , test data for performance
@@ -979,7 +823,7 @@ std_train_X2,std_test_X2,std_train_y2,std_test_y2 = train_test_split(std_data,st
 std_train_X2,std_valid_X2,std_train_y2,std_valid_y2 = train_test_split(std_train_X2,std_train_y2,test_size = 0.3,random_state = 21)
 
 
-# In[289]:
+# In[106]:
 
 
 tree_params = {
@@ -990,7 +834,7 @@ tree_params = {
 }
 
 
-# In[292]:
+# In[107]:
 
 
 #decision tree with gridsearchcv
@@ -1001,27 +845,27 @@ tree_grid = GridSearchCV(DecisionTreeRegressor(random_state = 122),
                          n_jobs = -1)
 
 
-# In[293]:
+# In[108]:
 
 
 tree_grid.fit(std_train_X1,std_train_y1)
 
 
-# In[295]:
+# In[109]:
 
 
 tree_grid.best_score_
 tree_grid.best_params_
 
 
-# In[296]:
+# In[110]:
 
 
 #make decision tree with best params
 best_tree = DecisionTreeRegressor(criterion="mae",max_depth=6,max_features="auto",splitter="best",random_state=121)
 
 
-# In[299]:
+# In[111]:
 
 
 #predict with test data and get score
@@ -1056,7 +900,7 @@ print("------------std_test_score---------------")
 best_tree.score(std_test_X1,std_test_y1)
 
 
-# In[303]:
+# In[112]:
 
 
 #gradient boosting with std scaled dataset
@@ -1067,7 +911,7 @@ RMSE = np.sqrt(mean_squared_error(gbr_pred,std_test_y1))
 RMSE
 
 
-# In[304]:
+# In[113]:
 
 
 gbr_params = {
@@ -1081,37 +925,26 @@ gbr_params = {
 }
 
 
-# In[ ]:
-
-
-#gradient boosting의 장점은 boosted tree가 완성된 후, 
-#feature의 중요도 스코어를 내는 것이 상대적으로 쉽다는 것이다. 
-#어떠한 변수가 decision tree에서 "중요한 결정" 을 내리는데 사용된다면 그 변수의 중요도는 높을 것이다. 
-#중요도는 변수별로 계산되며, 각각의 변수는 중요도 랭킹에 따라 정렬될 수 있다. 
-#어떠한 변수의 중요도는 하나의 decision tree에서 그 변수로 인해 performance measure를 증가하는 양으로 계산된다.
-#출처: https://3months.tistory.com/169 [Deep Play]
-
-
-# In[305]:
+# In[114]:
 
 
 gbr_grid = GridSearchCV(GradientBoostingRegressor(random_state = 33),gbr_params,cv=3,n_jobs=-1,verbose = 1)
 
 
-# In[306]:
+# In[115]:
 
 
 gbr_grid.fit(std_train_X1,std_train_y1)
 
 
-# In[308]:
+# In[116]:
 
 
 gbr_grid.best_params_
 gbr_grid.best_score_
 
 
-# In[309]:
+# In[117]:
 
 
 #make GradientBoostingRegressor with best params
@@ -1120,7 +953,7 @@ gbr_best = GradientBoostingRegressor(
                                     random_state=133)
 
 
-# In[310]:
+# In[118]:
 
 
 #predict with test data and get score
@@ -1155,31 +988,132 @@ print("------------std_test_score with GradientBoostingRegressor---------------"
 gbr_best.score(std_test_X1,std_test_y1)
 
 
-# In[321]:
+# In[119]:
 
 
+#draw feature importance horizontal bar graph
 feature_importance = gbr_best.feature_importances_
 sorted_idx = np.argsort(feature_importance)
 pos = np.arange(sorted_idx.shape[0]) + .5
-fig = plt.figure(figsize=(12, 6))
+fig = plt.figure(figsize=(38, 19))
 plt.subplot(1, 2, 1)
 plt.barh(pos, feature_importance[sorted_idx], align='center')
 plt.yticks(pos, np.array(std_data.columns)[sorted_idx])
 plt.title('Feature Importance (PM10)')
 
-#result = permutation_importance(reg, X_test, y_test, n_repeats=10,
-                                #random_state=42, n_jobs=2)
-#sorted_idx = result.importances_mean.argsort()
-#plt.subplot(1, 2, 2)
-#plt.boxplot(result.importances[sorted_idx].T,
-           # vert=False, labels=np.array(diabetes.feature_names)[sorted_idx])
-#plt.title("Permutation Importance (test set)")
-#fig.tight_layout()
-#plt.show()
+
+# In[120]:
+
+
+#for target2 ( PM2.5)
+tree_grid.fit(std_train_X2,std_train_y2)
+tree_grid.best_score_
+tree_grid.best_params_
+
+
+# In[121]:
+
+
+#make decision tree with best params
+best_tree = DecisionTreeRegressor(criterion="mae",max_depth=6,max_features="auto",splitter="best",random_state=1212)
+#predict with test data and get score
+#train dataset
+best_tree.fit(std_train_X2,std_train_y2)
+best_pred = best_tree.predict(std_train_X2)
+mse = mean_squared_error(best_pred,std_train_y2)
+print("------------std_train_mse---------------")
+mse
+print("------------std_train_score---------------")
+best_tree.score(std_train_X2,std_train_y2)
+
+#valid dataset
+best_tree.fit(std_valid_X2,std_valid_y2)
+best_valid_pred = best_tree.predict(std_valid_X2)
+valid_mse = mean_squared_error(best_valid_pred,std_valid_y2)
+print("------------std_valid_mse---------------")
+valid_mse
+print("------------std_valid_score---------------")
+best_tree.score(std_valid_X2,std_valid_y2)
+
+#test dataset
+best_tree.fit(std_test_X2,std_test_y2)
+best_test_pred = best_tree.predict(std_test_X2)
+test_mse = mean_squared_error(best_test_pred,std_test_y2)
+print("------------std_test_mse---------------")
+test_mse
+print("------------std_test_root_mse---------------")
+rmse = np.sqrt(test_mse)
+rmse
+print("------------std_test_score---------------")
+best_tree.score(std_test_X2,std_test_y2)
+
+
+# In[122]:
+
+
+#gradient boosting with std scaled dataset
+gbr = GradientBoostingRegressor(random_state = 131).fit(std_train_X2,std_train_y2)
+gbr_pred = gbr.predict(std_test_X2)
+gbr.score(std_test_X2,std_test_y2)
+RMSE = np.sqrt(mean_squared_error(gbr_pred,std_test_y2))
+RMSE
+gbr_grid = GridSearchCV(GradientBoostingRegressor(random_state = 331),gbr_params,cv=3,n_jobs=-1,verbose = 1)
+gbr_grid.fit(std_train_X2,std_train_y2)
+gbr_grid.best_params_
+gbr_grid.best_score_
+
+
+# In[123]:
+
+
+#make GradientBoostingRegressor with best params
+gbr_best = GradientBoostingRegressor(
+                             learning_rate = 0.01,max_depth = 3,max_features = 0.5,min_samples_split = 2,n_estimators = 600,
+                                    random_state=1331)
+#predict with test data and get score
+#train dataset
+gbr_best.fit(std_train_X2,std_train_y2)
+best_pred =gbr_best.predict(std_train_X2)
+mse = mean_squared_error(best_pred,std_train_y2)
+print("------------std_train_mse with GradientBoostingRegressor---------------")
+mse
+print("------------std_train_score with GradientBoostingRegressor---------------")
+gbr_best.score(std_train_X2,std_train_y2)
+
+#valid dataset
+gbr_best.fit(std_valid_X2,std_valid_y2)
+best_valid_pred = gbr_best.predict(std_valid_X2)
+valid_mse = mean_squared_error(best_valid_pred,std_valid_y2)
+print("------------std_valid_mse with GradientBoostingRegressor---------------")
+valid_mse
+print("------------std_valid_score with GradientBoostingRegressor---------------")
+gbr_best.score(std_valid_X2,std_valid_y2)
+
+#test dataset
+gbr_best.fit(std_test_X2,std_test_y2)
+best_test_pred = gbr_best.predict(std_test_X2)
+test_mse = mean_squared_error(best_test_pred,std_test_y2)
+print("------------std_test_mse with GradientBoostingRegressor---------------")
+test_mse
+print("------------std_test_root_mse with GradientBoostingRegressor---------------")
+rmse = np.sqrt(test_mse)
+rmse
+print("------------std_test_score with GradientBoostingRegressor---------------")
+
+#draw feature importance horizontal bar graph
+gbr_best.score(std_test_X2,std_test_y2)
+feature_importance = gbr_best.feature_importances_
+sorted_idx = np.argsort(feature_importance)
+pos = np.arange(sorted_idx.shape[0]) + .5
+fig = plt.figure(figsize=(38, 19))
+plt.subplot(1, 2, 1)
+plt.barh(pos, feature_importance[sorted_idx], align='center')
+plt.yticks(pos, np.array(std_data.columns)[sorted_idx])
+plt.title('Feature Importance (PM2.5)')
 
 
 # In[ ]:
 
 
-#변수 중요도는 "해당 변수가 상대적으로 얼마만큼 종속변수에 영향을 주는가?"에 대한 척도
+
 
