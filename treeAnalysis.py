@@ -14,7 +14,7 @@ from sklearn.metrics import mean_squared_error
 #Open Source - Tree analysis
 class treeAnalysis:
     #Visualize decision tree (using graphviz)
-    def printTreeGraph(model, feature_name, target_name):
+    def printTreeGraph(self,model, feature_name, target_name):
         #put tree data for graphviz
         dot_data = tree.export_graphviz(model,
                                         out_file=None,
@@ -28,14 +28,14 @@ class treeAnalysis:
         print(graph)
 
     #k-fold cross-validation score
-    def foldValidatation(model, train_x, train_y, foldNum):
+    def foldValidatation(self,model, train_x, train_y, foldNum):
         cv_scores = cross_val_score(model, train_x, train_y, cv=foldNum)
         print(cv_scores)
         print("cv_scores mean: {}".format(np.mean(cv_scores)))
         print(cross_validate(model, train_x, train_y, scoring=['accuracy', 'roc_auc'], return_train_score=True))
 
     #find best tree model by using gridSearchCV
-    def findBestTree(x_train, y_train):
+    def findBestTree(self,x_train, y_train):
         #set tree parameter candidate
         #make a combination for gridSearch
         tree_params = {
@@ -60,7 +60,7 @@ class treeAnalysis:
         print(tree_grid.best_score_)
 
     #find best boosted tree(GradientBoostingRegressor) by using gridSearchCV
-    def findBestBoostedTree(tree_model, x_train, y_train):
+    def findBestBoostedTree(self,tree_model, x_train, y_train):
         #not trained gradient boosting regressor model
         #train with training dataset
         gbr = GradientBoostingRegressor(random_state=13).fit(x_train, y_train)
@@ -90,7 +90,7 @@ class treeAnalysis:
         print(gbr_grid.best_score_)
 
     #plot feature importance - gradient boosting
-    def plotFeatureImportance(gbr_model, data):
+    def plotFeatureImportance(self,gbr_model, data):
         #feature's importance of optimized gradient boosting model
         feature_importance = gbr_model.feature_importances_
         #sorting importance
