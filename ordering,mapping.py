@@ -27,7 +27,7 @@ Function: Switch data with labeled datas in oneHotencoded data and calculate mea
 
 Parameter: dataset,labeled array
 
-Return: 
+Return: name of column, mean of column
 
 Condition: 
         -dataset should be OneHotEncoded
